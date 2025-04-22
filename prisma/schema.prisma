@@ -8,47 +8,46 @@ datasource db {
 }
 
 model User {
-  id                   Int           @id @default(autoincrement())
-  firstname            String
-  lastname             String
-  email                String        @unique
-  password             String
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  id           Int           @id @default(autoincrement())
+  firstname    String
+  lastname     String
+  email        String        @unique
+  password     String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   // Relations
-  wallets              Wallet[]
-  orders               Order[]
-  transactionsSent     Transaction[] @relation("SentTransactions")
-  transactionsReceived Transaction[] @relation("ReceivedTransactions")
+  wallets      Wallet[]
+  orders       Order[]
+  transactions Transaction[]
 }
 
 model Wallet {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  currencyId Int
-  balance    Decimal   @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               Int            @id @default(autoincrement())
+  userId           Int
+  cryptoCurrencyId Int
+  balance          Decimal        @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
   // Relations
-  user       User     @relation(fields: [userId], references: [id])
-  currency   Currency @relation(fields: [currencyId], references: [id])
+  user             User           @relation(fields: [userId], references: [id])
+  cryptoCurrency   CryptoCurrency @relation(fields: [cryptoCurrencyId], references: [id])
 
-  @@unique([userId, currencyId]) // Prevent duplicate wallets per currency
+  @@unique([userId, cryptoCurrencyId]) // Prevent duplicate wallets per currency
 }
 
 model Order {
-  id          Int           @id @default(autoincrement())
-  userId      Int
-  currencyId  Int
-  status      OrderStatus @default(PENDING)
-  amount      Decimal
-  price       Decimal
-  type        OrderType
-  createdAt   DateTime      @default(now())
+  id               Int            @id @default(autoincrement())
+  userId           Int
+  cryptoCurrencyId Int
+  status           OrderStatus    @default(PENDING)
+  amount           Decimal
+  price            Decimal
+  type             OrderType
+  createdAt        DateTime       @default(now())
   // Relations
-  user        User          @relation(fields: [userId], references: [id])
-  currency    Currency      @relation(fields: [currencyId], references: [id])
-  Transaction Transaction[]
+  user             User           @relation(fields: [userId], references: [id])
+  cryptoCurrency   CryptoCurrency @relation(fields: [cryptoCurrencyId], references: [id])
+  Transaction      Transaction[]
 }
 
 enum OrderStatus {
@@ -63,48 +62,29 @@ enum OrderType {
 }
 
 model Transaction {
-  id         Int      @id @default(autoincrement())
-  currencyId Int
-  orderId    Int?
-  amount     Decimal
-  fee        Decimal
-  fromUserId Int
-  toUserId   Int
-  createdAt  DateTime @default(now())
-  // Relations
-  order      Order?   @relation(fields: [orderId], references: [id])
-  currency   Currency @relation(fields: [currencyId], references: [id])
-  fromUser   User     @relation("SentTransactions", fields: [fromUserId], references: [id])
-  toUser     User     @relation("ReceivedTransactions", fields: [toUserId], references: [id])
-}
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  cryptoCurrencyId Int
+  orderId          Int
+  status           String
+  fee              Float
+  createdAt        DateTime @default(now())
+  paymentMethod    String
+  type             String // could be "Buy", "Sell", "Deposit", "Withdraw", etc.
 
-model Currency {
-  id               Int             @id @default(autoincrement())
-  fiatCurrencyId   Int?
-  cryptoCurrencyId Int?
-  isActive         Boolean         @default(true)
-  // Relations
-  fiatCurrency     FiatCurrency?   @relation(fields: [fiatCurrencyId], references: [id])
-  cryptoCurrency   CryptoCurrency? @relation(fields: [cryptoCurrencyId], references: [id])
-  wallets          Wallet[]
-  orders           Order[]
-  transactions     Transaction[]
-}
-
-model FiatCurrency {
-  id         Int        @id @default(autoincrement())
-  name       String
-  price      Decimal
-  logo       String?
-  // Relations
-  currencies Currency[]
+  user           User           @relation(fields: [userId], references: [id])
+  cryptoCurrency CryptoCurrency @relation(fields: [cryptoCurrencyId], references: [id])
+  order          Order          @relation(fields: [orderId], references: [id])
 }
 
 model CryptoCurrency {
-  id         Int        @id @default(autoincrement())
-  name       String
-  price      Decimal
-  logo       String?
+  id           Int           @id @default(autoincrement())
+  name         String
+  price        Decimal
+  logo         String?
+  isActive     Boolean       @default(true)
   // Relations
-  currencies Currency[]
+  wallets      Wallet[]
+  orders       Order[]
+  transactions Transaction[]
 }
